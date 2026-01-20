@@ -73,12 +73,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Run OWASP Dependency-Check
-        uses: owasp/dependency-check-action@v2
-        with:
-          scan: .
-          format: HTML
-          out: reports
+      - name: Install OWASP Dependency-Check CLI
+        run: |
+          curl -sSL https://github.com/jeremylong/DependencyCheck/releases/download/v8.0.2/dependency-check-8.0.2-release.zip -o dc.zip
+          unzip dc.zip -d dc
+          chmod +x dc/dependency-check/bin/dependency-check.sh
+
+      - name: Run Dependency-Check
+        run: |
+          ./dc/dependency-check/bin/dependency-check.sh \
+            --project "calculator-app" \
+            --scan . \
+            --format "HTML" \
+            --out "reports"
 
       - name: Upload Dependency Check Report
         uses: actions/upload-artifact@v4
