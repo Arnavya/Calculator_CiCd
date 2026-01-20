@@ -1,5 +1,0 @@
--r requirements.txt
-pytest==8.2.1
-pytest-cov==4.1.0
-flake8==7.1.0
-ruff==0.0.304  # a stable, existing version

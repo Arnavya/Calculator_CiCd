@@ -25,12 +25,12 @@ jobs:
         with:
           python-version: ${{ env.PYTHON_VERSION }}
           cache: pip
-          cache-dependency-path: requirements-dev.txt
+          cache-dependency-path: requirements.txt
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements-dev.txt
+          pip install -r requirements.txt
 
       - name: Lint (ruff)
         run: ruff app tests
@@ -101,6 +101,7 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
+        # If you don’t have a license, this step will need a GITLEAKS_LICENSE secret
 
   build-and-push:
     name: Build, Test & Push Image
