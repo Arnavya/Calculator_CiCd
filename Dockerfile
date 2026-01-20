@@ -17,5 +17,5 @@ COPY . .
 # Expose Flask port
 EXPOSE 5000
 
-# Run the app
+# Run the app server
 CMD ["python", "-m", "app.main"]
