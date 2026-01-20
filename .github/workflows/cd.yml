@@ -9,7 +9,7 @@ on:
 env:
   IMAGE_NAME: calculator-app
   K8S_MANIFESTS_PATH: k8s
-  AWS_REGION: eu-north-1
+  AWS_REGION: ${{ secrets.AWS_REGION }}
 
 jobs:
   deploy:
