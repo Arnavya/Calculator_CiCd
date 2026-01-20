@@ -128,7 +128,7 @@ jobs:
 
       - name: Build image
         run: |
-          IMAGE=secrets.DOCKERHUBUSERNAME/{{ env.IMAGE_NAME }}
+          IMAGE=secrets.DOCKERHUBUSERNAME/${{ env.IMAGE_NAME }}
           SHA_TAG=sha-${GITHUB_SHA::7}
           docker build -t IMAGE:latest−tIMAGE:$SHA_TAG .
       - name: Image scan (Trivy)
