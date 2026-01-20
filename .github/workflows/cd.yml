@@ -1,31 +1,58 @@
-# .github/workflows/cd.yml
-name: Continuous Deployment
+name: CD - Deploy to AWS EKS
 
-# Trigger this workflow only after CI workflow succeeds
 on:
   workflow_run:
-    workflows: ["CI"]
+    workflows: ["CI - Quality, Security & Build"]
     types:
       - completed
 
+env:
+  IMAGE_NAME: calculator-app
+  K8S_NAMESPACE: default        # change if you use a different namespace
+
 jobs:
   deploy:
-    # Only run if the triggering workflow (CI) was successful
+    name: Deploy to EKS
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v2
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
 
-      - name: Build Docker image
-        run: docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/calculator-app:latest .
+      - name: Update kubeconfig
+        run: |
+          aws eks update-kubeconfig --region ${{ secrets.AWS_REGION }} --name ${{ secrets.EKS_CLUSTER_NAME }}
 
-      - name: Push Docker image to Docker Hub
-        run: docker push ${{ secrets.DOCKERHUB_USERNAME }}/calculator-app:latest
+      - name: Apply Kubernetes manifests
+        run: |
+          kubectl apply -f k8s/deployment.yaml -n ${{ env.K8S_NAMESPACE }}
+          kubectl apply -f k8s/service.yaml -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Update image in deployment
+        run: |
+          kubectl set image deployment/calculator \
+            calculator=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest \
+            -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Verify rollout
+        run: kubectl rollout status deployment/calculator -n ${{ env.K8S_NAMESPACE }}
+
+      - name: Basic runtime checks
+        run: |
+          IP=$(kubectl get svc calculator-service \
+            -n ${{ env.K8S_NAMESPACE }} \
+            -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || true)
+          if [ -z "$IP" ]; then
+            echo "Service LoadBalancer hostname not available yet"
+            exit 1
+          fi
+          echo "App URL: http://$IP"
+          curl -f http://$IP/
