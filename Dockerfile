@@ -1,14 +1,13 @@
-# Use official Python slim image
-FROM python:3.12-slim
+FROM python:3.11-slim
 
 # Set working directory
 WORKDIR /app
 
-# Prevent Python from writing pyc files and enable unbuffered output
+# Prevent Python from writing pyc files
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-# Copy requirements and install only production dependencies
+# Install dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
@@ -18,5 +17,5 @@ COPY . .
 # Expose Flask port
 EXPOSE 5000
 
-# Run the Flask app
-CMD ["python", "-m", "app.routes"]
+# Run the app
+CMD ["python", "-m", "app.main"]
