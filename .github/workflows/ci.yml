@@ -147,7 +147,7 @@ jobs:
           docker run -d -p 8001:5000 --name calc-test \
             ${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           sleep 5
-          curl -f http://localhost:5000/
+          curl -f http://localhost:8001/
 
       - name: Push image
         run: |
