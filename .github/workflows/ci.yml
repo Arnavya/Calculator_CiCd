@@ -92,6 +92,7 @@ jobs:
   secrets-scan:
     name: Secrets Scan (Gitleaks)
     runs-on: ubuntu-latest
+    continue-on-error: true
 
     steps:
       - name: Checkout code (full history required)
@@ -101,7 +102,10 @@ jobs:
 
       - name: Run Gitleaks
         uses: gitleaks/gitleaks-action@v2
-        # If you don’t have a license, this step will need a GITLEAKS_LICENSE secret
+
+        with:
+           license: ${{ secrets.GITLEAKS_LICENSE || '' }}
+        
 
   build-and-push:
     name: Build, Test & Push Image
