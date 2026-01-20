@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: calculator-deploy
+  labels:
+    app: calculator-cicd
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: calculator-cd
+  template:
+    metadata:
+      labels:
+        app: calculator-cd
+    spec:
+      containers:
+        - name: calculator
+          image: arnavya/calculator-app:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 5000
