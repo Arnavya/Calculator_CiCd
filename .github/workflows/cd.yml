@@ -16,13 +16,15 @@ jobs:
     name: Deploy to Amazon EKS
     runs-on: ubuntu-latest
 
+    # Only deploy if CI was successful
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
+      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # AWS Auth
+      # Configure AWS credentials
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
@@ -30,30 +32,34 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # kubectl install
+      # Test AWS authentication
+      - name: Test AWS credentials
+        run: aws sts get-caller-identity
+
+      # Install kubectl
       - name: Install kubectl
         run: |
-          curl -LO https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl
+          curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/amd64/kubectl"
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
-      # kubeconfig
+      # Configure kubeconfig from secret
       - name: Configure kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      # Deploy
+      # Deploy to EKS
       - name: Deploy to EKS
         run: |
-          kubectl apply -f k8s
+          kubectl apply -f ${{ env.K8S_MANIFESTS_PATH }}
           kubectl set image deployment/calculator-deploy \
-            calculator=${{ secrets.DOCKERHUB_USERNAME }}/calculator-app:latest
+            calculator=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
           kubectl rollout status deployment/calculator-deploy
 
-      # Dummy DAST (simple)
-      - name: Dummy DAST Check
+      # Optional: Simple DAST / smoke check
+      - name: Verify Deployment
         run: |
-          echo "Running basic DAST check"
+          echo "Checking services..."
           kubectl get svc calculator-service
