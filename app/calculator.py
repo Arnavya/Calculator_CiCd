@@ -10,6 +10,7 @@ def multiply(a, b):
     return round(a * b, 2)
 
 
+
 def divide(a, b):
     if b == 0:
         raise ValueError("Division by zero")
