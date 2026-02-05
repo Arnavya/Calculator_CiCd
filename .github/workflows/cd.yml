@@ -16,7 +16,7 @@ jobs:
     name: Deploy to Amazon EKS
     runs-on: ubuntu-latest
 
-    # Only deploy if CI was successful
+    # Deploy only if CI succeeded
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
 
     steps:
@@ -32,8 +32,8 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
 
-      # Test AWS authentication
-      - name: Test AWS credentials
+      # Verify AWS identity
+      - name: Verify AWS credentials
         run: aws sts get-caller-identity
 
       # Install kubectl
@@ -43,23 +43,30 @@ jobs:
           chmod +x kubectl
           sudo mv kubectl /usr/local/bin/
 
-      # Configure kubeconfig from secret
+      # Configure kubeconfig
       - name: Configure kubeconfig
         run: |
           mkdir -p $HOME/.kube
           echo "${{ secrets.KUBE_CONFIG_DATA }}" | base64 --decode > $HOME/.kube/config
           chmod 600 $HOME/.kube/config
 
-      # Deploy to EKS
+      # Deploy to EKS using VERSIONED image
       - name: Deploy to EKS
         run: |
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}
+          TAG=sha-${GITHUB_SHA::7}
+
+          echo "Deploying image: $IMAGE:$TAG"
+
           kubectl apply -f ${{ env.K8S_MANIFESTS_PATH }}
+
           kubectl set image deployment/calculator-deploy \
-            calculator=${{ secrets.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+            calculator=$IMAGE:$TAG
+
           kubectl rollout status deployment/calculator-deploy
 
-      # Optional: Simple DAST / smoke check
+      # Verify service
       - name: Verify Deployment
         run: |
-          echo "Checking services..."
+          kubectl get pods
           kubectl get svc calculator-service

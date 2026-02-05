@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: calculator
-          image: arnavya/calculator-app:latest
-          imagePullPolicy: Always
+          image: arnavya/calculator-app:REPLACE_TAG #arnavya/calculator-app:latest
+          imagePullPolicy: IfNotPresent #Always
           ports:
             - containerPort: 5000
