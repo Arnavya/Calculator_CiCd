@@ -4,7 +4,7 @@ from app import create_app
 
 
 def test_add():
-    assert add(2, 3) == 15
+    assert add(2, 3) == 5
 
 
 def test_subtract():
@@ -12,7 +12,7 @@ def test_subtract():
 
 
 def test_multiply():
-    assert multiply(4, 3) == 12
+    assert multiply(4, 3) == 12.00
 
 
 def test_divide():
