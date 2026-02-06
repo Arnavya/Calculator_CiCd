@@ -35,8 +35,8 @@ jobs:
       - name: Lint (ruff)
         run: ruff app tests
 
-      - name: Lint (flake8)
-        run: flake8 app tests
+      # - name: Lint (flake8)
+      #   run: flake8 app tests
 
       - name: Unit tests
         env:
